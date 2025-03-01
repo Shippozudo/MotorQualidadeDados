@@ -1,0 +1,29 @@
+@startuml
+title Fluxo de Validação - Motor Qualidade de Dados
+
+!pragma teoz true
+box "INSTITUIÇÃO FINANCEIRA" #LightBlue
+  box "Motor Qualidade de Dados (MQD)" #LightGreen
+    participant MESSAGE_PROCESS_WORKER
+    participant QUEUE_MANAGER
+    participant VALIDATOR
+  end box
+end box
+
+autonumber 0
+VALIDATOR -> VALIDATOR: Update ValidantionRules
+MESSAGE_PROCESS_WORKER -> MESSAGE_PROCESS_WORKER: Check Queue
+
+MESSAGE_PROCESS_WORKER -> QUEUE_MANAGER: Get queued Message
+QUEUE_MANAGER -> MESSAGE_PROCESS_WORKER: Messages
+loop messages.length times
+    MESSAGE_PROCESS_WORKER -> VALIDATOR : Validate Message
+    VALIDATOR -> VALIDATOR: Validate Endpoint
+    VALIDATOR -> VALIDATOR: Unmarshal Payload
+    VALIDATOR -> VALIDATOR : Validate Object
+    VALIDATOR -> MESSAGE_PROCESS_WORKER: Return valid result
+end
+
+MESSAGE_PROCESS_WORKER -> MESSAGE_PROCESS_WORKER : Store Result
+
+@enduml

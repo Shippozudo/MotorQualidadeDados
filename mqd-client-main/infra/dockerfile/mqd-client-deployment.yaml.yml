@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mqd-client
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mqd-client
+  template:
+    metadata:
+      labels:
+        app: mqd-client
+    spec:
+      containers:
+      - name: mqd-client
+        image: shippozudo/pocmqd:latest
+        ports:
+        - containerPort: 8080
+        envFrom:
+        - configMapRef:
+            name: mqd-client-config
+        resources:
+          limits:
+            memory: "1024Mi"
+            cpu: "1"
+          requests:
+            memory: "128Mi"
+            cpu: "0.25"
+        volumeMounts:
+        - mountPath: /usr/ParameterData/certificates
+          name: certificates
+      volumes:
+      - name: certificates
+        hostPath:
+          path: /caminho/para/certificates  # Ajuste o caminho para o volume local

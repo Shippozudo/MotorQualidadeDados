@@ -1,0 +1,55 @@
+@startuml
+title Fluxo de Envio de Resultados - Motor Qualidade de Dados
+
+!pragma teoz true
+box "INSTITUIÇÃO FINANCEIRA" #147d96
+  box "Motor Qualidade de Dados (MQD)"
+    participant RESULT_PROCESSOR
+    participant VALIDATOR
+  end box
+  box "MQD SERVER PROXY"
+    participant PROXY
+  end box
+end box
+
+box "PERIMETRO CENTRAL" #FAD7AC
+   box "MQD SERVER" #FAD7AC
+   participant GATEWAY #7EA6E0
+end box
+
+note over RESULT_PROCESSOR
+   1. A cada 30 minutos, o MQD
+   resume as informacoes de validacao
+   e as envia para o servidor central
+end note
+
+autonumber 0
+RESULT_PROCESSOR -> RESULT_PROCESSOR : Tick Time (Defined time)
+RESULT_PROCESSOR -> VALIDATOR : Get Validation Results
+VALIDATOR -> RESULT_PROCESSOR : Results
+VALIDATOR -> VALIDATOR : Clean Results
+RESULT_PROCESSOR -> RESULT_PROCESSOR : Build summary data
+
+note over RESULT_PROCESSOR 
+   2. MQD solicita o token (OAUTH 2)
+   no AUTH_SERVER
+end note
+
+RESULT_PROCESSOR -> PROXY: /token (clientID)
+PROXY -> GATEWAY: /token (clientID)
+GATEWAY -> GATEWAY : validate client ID
+GATEWAY -> PROXY : JWT
+PROXY -> RESULT_PROCESSOR : JWT
+
+note over RESULT_PROCESSOR
+   3. MQD envia o relatorio usando
+   o token e os certificados mTLS
+end note
+
+RESULT_PROCESSOR -> PROXY : /report (Summary)
+PROXY -> GATEWAY : /report (Summary)
+GATEWAY -> GATEWAY : validate token
+GATEWAY -> GATEWAY : store report
+GATEWAY -> PROXY : HTTP 200 OK
+PROXY -> RESULT_PROCESSOR : HTTP 200 OK
+@enduml

@@ -1,0 +1,11 @@
+{
+  "Version": "1.0.0",
+  "ValidationSettings": {},
+  "ReportSettings": {
+    "ReportExecutionWindow": 30,
+    "SendOnReportNumber": 100000
+  },
+  "SecuritySettings": {
+    "AttributesToMask": ["password", "creditCardNumber"]
+  }
+}

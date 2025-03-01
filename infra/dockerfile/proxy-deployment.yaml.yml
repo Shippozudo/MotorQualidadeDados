@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: proxy
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: proxy
+  template:
+    metadata:
+      labels:
+        app: proxy
+    spec:
+      containers:
+      - name: proxy
+        image: nginx
+        ports:
+        - containerPort: 80
+        volumeMounts:
+        - mountPath: /etc/nginx/conf.d  # Configuração do Nginx
+          name: nginx-config
+        - mountPath: /etc/ssl  # Certificados SSL
+          name: ssl-certs
+        - mountPath: /etc/nginx/conf.d/settings  # Arquivo de configuração settings
+          name: nginx-settings
+      volumes:
+      - name: nginx-config
+        configMap:
+          name: nginx-config
+      - name: ssl-certs
+        hostPath:
+          path: /path/to/certificates  # Ajuste o caminho para o volume local
+      - name: nginx-settings
+        hostPath:
+          path: /caminho/para/settings  # Ajuste o caminho para o volume local
