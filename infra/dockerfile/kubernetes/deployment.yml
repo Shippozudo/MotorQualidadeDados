@@ -20,42 +20,40 @@ spec:
             - containerPort: 8080
           env:
             - name: PROXY_URL
-              value: "http://proxy-service:8082"
+              value: "http://proxy-service:8081"
             - name: API_PORT
               value: ":8080"
+            - name: CONFIG_URL
+              value: "http://mqd-client-service:8080/settings/configurationSettings.json"
             - name: SERVER_ORG_ID
               value: "09b20d09-bf30-4497-938e-b0ead8ce9629"
             - name: ENVIRONMENT
-              value: "DEV"
+              value: "sandbox"
             - name: LOGGING_LEVEL
-              value: "WARNING"
+              value: "INFORMATION"
             - name: APPLICATION_MODE
               value: "TRANSMITTER"
             - name: ENABLE_HTTPS
               value: "TRUE"
             - name: CERTIFICATE_PATH
               value: "/certificates"
+          resources:
+            requests:
+              memory: "64Mi"
+              cpu: "250m"
+            limits:
+              memory: "128Mi"
+              cpu: "500m"
           volumeMounts:
             - name: ssl-certs
-              mountPath: /certificates  # Montando os certificados SSL no contêiner
+              mountPath: /certificates
       volumes:
         - name: ssl-certs
           secret:
-            secretName: ssl-certs-secret   # Referência ao Secret que contém os certificados SSL
+            secretName: ssl-certs-secret
+
 ---
-apiVersion: v1
-kind: Service
-metadata:
-  name: mqd-client-service
-spec:
-  selector:
-    app: mqd-client
-  ports:
-    - protocol: TCP
-      port: 8080
-      targetPort: 8080
-  type: NodePort
----
+
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -74,15 +72,23 @@ spec:
         - name: proxy
           image: nginx:latest
           ports:
-            - containerPort: 8082
+            - containerPort: 8081
           volumeMounts:
             - name: ssl-certs
-              mountPath: /etc/ssl  # Mapeando os certificados SSL para o caminho correto no proxy
+              mountPath: /etc/ssl
+            - name: nginx-config
+              mountPath: /etc/nginx/nginx.conf
+              subPath: nginx.conf
       volumes:
         - name: ssl-certs
           secret:
             secretName: ssl-certs-secret
+        - name: nginx-config
+          configMap:
+            name: nginx-config
+
 ---
+
 apiVersion: v1
 kind: Service
 metadata:
@@ -91,7 +97,8 @@ spec:
   selector:
     app: proxy
   ports:
-    - protocol: TCP
-      port: 8082
-      targetPort: 8082
-  type: ClusterIP
+    - name: http
+      protocol: TCP
+      port: 8081
+      targetPort: 8081
+  type: NodePort
