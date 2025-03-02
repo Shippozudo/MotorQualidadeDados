@@ -32,9 +32,6 @@ spec:
               value: "WARNING"
             - name: APPLICATION_MODE
               value: "TRANSMITTER"
-          volumeMounts:
-            - name: ssl-certs
-              mountPath: /certificates
           resources:
             limits:
               cpu: "1"
@@ -42,10 +39,6 @@ spec:
             requests:
               cpu: "0.25"
               memory: "128Mi"
-      volumes:
-        - name: ssl-certs
-          secret:
-            secretName: ssl-certs-secret
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -65,17 +58,12 @@ spec:
         - name: proxy
           image: nginx:latest
           ports:
-            - containerPort: 80
+            - containerPort: 8081
           volumeMounts:
-            - name: ssl-certs
-              mountPath: /etc/ssl
             - name: nginx-config
               mountPath: /etc/nginx/nginx.conf
               subPath: nginx.conf
       volumes:
-        - name: ssl-certs
-          secret:
-            secretName: ssl-certs-secret
         - name: nginx-config
           configMap:
             name: nginx-config
@@ -89,5 +77,5 @@ spec:
     app: proxy
   ports:
     - port: 8081
-      targetPort: 80
+      targetPort: 8081
   type: NodePort

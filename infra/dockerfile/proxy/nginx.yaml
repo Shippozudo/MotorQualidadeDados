@@ -4,15 +4,21 @@ metadata:
   name: nginx-config
 data:
   nginx.conf: |
-    server {
-        listen 80;
-        server_name localhost;
+    events {
+        worker_connections 1024;
+    }
 
-        location /settings {
-            proxy_pass http://mqd-client-service:8080/settings/configurationSettings.json;
-        }
+    http {
+        server {
+            listen 8081;
+            server_name localhost;
 
-        location /ValidateResponse {
-            proxy_pass http://mqd-client-service:8080/ValidateResponse;
+            location /settings {
+                proxy_pass http://mqd-client-service:8080/settings/configurationSettings.json;
+            }
+
+            location /ValidateResponse {
+                proxy_pass http://mqd-client-service:8080/ValidateResponse;
+            }
         }
     }
