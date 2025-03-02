@@ -4,46 +4,18 @@ metadata:
   name: mqd-client-deployment
 spec:
   replicas: 1
-  selector:
-    matchLabels:
-      app: mqd-client
   template:
-    metadata:
-      labels:
-        app: mqd-client
     spec:
       containers:
         - name: mqd-client
           image: shippozudo/pocmqd:latest
-          imagePullPolicy: Always
           ports:
             - containerPort: 8080
           env:
             - name: PROXY_URL
               value: "http://proxy-service:8081"
-            - name: API_PORT
-              value: ":8080"
             - name: CONFIG_URL
               value: "http://mqd-client-service:8080/settings/configurationSettings.json"
-            - name: SERVER_ORG_ID
-              value: "09b20d09-bf30-4497-938e-b0ead8ce9629"
-            - name: ENVIRONMENT
-              value: "sandbox"
-            - name: LOGGING_LEVEL
-              value: "INFORMATION"
-            - name: APPLICATION_MODE
-              value: "TRANSMITTER"
-            - name: ENABLE_HTTPS
-              value: "TRUE"
-            - name: CERTIFICATE_PATH
-              value: "/certificates"
-          resources:
-            requests:
-              memory: "64Mi"
-              cpu: "250m"
-            limits:
-              memory: "128Mi"
-              cpu: "500m"
           volumeMounts:
             - name: ssl-certs
               mountPath: /certificates
@@ -53,20 +25,13 @@ spec:
             secretName: ssl-certs-secret
 
 ---
-
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: proxy-deployment
 spec:
   replicas: 1
-  selector:
-    matchLabels:
-      app: proxy
   template:
-    metadata:
-      labels:
-        app: proxy
     spec:
       containers:
         - name: proxy
@@ -88,7 +53,6 @@ spec:
             name: nginx-config
 
 ---
-
 apiVersion: v1
 kind: Service
 metadata:
@@ -97,8 +61,6 @@ spec:
   selector:
     app: proxy
   ports:
-    - name: http
-      protocol: TCP
-      port: 8081
+    - port: 8081
       targetPort: 8081
   type: NodePort
