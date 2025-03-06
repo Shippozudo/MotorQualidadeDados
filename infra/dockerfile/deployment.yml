@@ -1,0 +1,81 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mqd-client-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mqd-client
+  template:
+    metadata:
+      labels:
+        app: mqd-client
+    spec:
+      containers:
+        - name: mqd-client
+          image: shippozudo/pocmqd:latest
+          ports:
+            - containerPort: 8080
+          env:
+            - name: PROXY_URL
+              value: "http://proxy-service:8081"
+            - name: CONFIG_URL
+              value: "http://mqd-client-service:8080/settings/configurationSettings.json"
+            - name: API_PORT
+              value: ":8080"
+            - name: SERVER_ORG_ID
+              value: "09b20d09-bf30-4497-938e-b0ead8ce9629"
+            - name: ENVIRONMENT
+              value: "DEV"
+            - name: LOGGING_LEVEL
+              value: "WARNING"
+            - name: APPLICATION_MODE
+              value: "TRANSMITTER"
+          resources:
+            limits:
+              cpu: "1"
+              memory: "1024Mi"
+            requests:
+              cpu: "0.25"
+              memory: "128Mi"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: proxy-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: proxy
+  template:
+    metadata:
+      labels:
+        app: proxy
+    spec:
+      containers:
+        - name: proxy
+          image: nginx:latest
+          ports:
+            - containerPort: 8081
+          volumeMounts:
+            - name: nginx-config
+              mountPath: /etc/nginx/nginx.conf
+              subPath: nginx.conf
+      volumes:
+        - name: nginx-config
+          configMap:
+            name: nginx-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: proxy-service
+spec:
+  selector:
+    app: proxy
+  ports:
+    - port: 8081
+      targetPort: 8081
+  type: NodePort
